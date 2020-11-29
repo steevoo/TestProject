@@ -74,6 +74,7 @@ import android.graphics.ColorFilter;
 import android.graphics.Paint;
 import android.graphics.PixelFormat;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.graphics.Typeface;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
@@ -82,23 +83,26 @@ import android.graphics.drawable.shapes.OvalShape;
 public class TextDrawable extends ShapeDrawable {
 
     private final Paint textPaint;
+    private final Paint borderPaint;
+    private static final float SHADE_FACTOR = 0.9f;
     private final String text;
-    private final int color;
     private final static OvalShape shape = new OvalShape();
     private final int height;
     private final int width;
     private final int fontSize;
+    private final int borderThickness;
 
     public TextDrawable(String text) {
         super(shape);
         this.text = text;
-        color = Color.RED;
+        int color = Color.RED;
         int textColor = Color.WHITE;
 
         width = -1;
         height = -1;
         Typeface font = Typeface.create("sans-serif-light", Typeface.NORMAL);
         fontSize = -1;
+        borderThickness = 5;
         boolean isBold = true;
         textPaint = new Paint();
         textPaint.setColor(textColor);
@@ -108,15 +112,27 @@ public class TextDrawable extends ShapeDrawable {
         textPaint.setTypeface(font);
         textPaint.setTextAlign(Paint.Align.CENTER);
 
+        borderPaint = new Paint();
+        borderPaint.setColor(Color.WHITE);//getDarkerShade(color)
+        borderPaint.setStyle(Paint.Style.STROKE);
+        borderPaint.setStrokeWidth(borderThickness);
+
         Paint paint = getPaint();
         paint.setColor(color);
 
+    }
+
+    private int getDarkerShade(int color) {
+        return Color.rgb((int) (SHADE_FACTOR * Color.red(color)),
+                (int) (SHADE_FACTOR * Color.green(color)),
+                (int) (SHADE_FACTOR * Color.blue(color)));
     }
 
     @Override
     public void draw(Canvas canvas) {
         super.draw(canvas);
         Rect r = getBounds();
+        drawBorder(canvas);
         int count = canvas.save();
         canvas.translate(r.left, r.top);
 
@@ -128,6 +144,13 @@ public class TextDrawable extends ShapeDrawable {
         canvas.drawText(text, width / 2, height / 2 - ((textPaint.descent() + textPaint.ascent()) / 2), textPaint);
 
         canvas.restoreToCount(count);
+    }
+
+    private void drawBorder(Canvas canvas) {
+        RectF rect = new RectF(getBounds());
+        rect.inset(borderThickness / 2, borderThickness / 2);
+        canvas.drawOval(rect, borderPaint);
+
     }
 
     @Override
